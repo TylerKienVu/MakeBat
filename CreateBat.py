@@ -4,10 +4,10 @@ from tkinter import messagebox
 
 def initGUI():
     master = Tk()
-    master.title("CreateBat")
+    master.title("CreateBat v0.2")
     master.resizable(width=False, height=False)
     
-    bots = ListBox(master,16,0,2,8,3,40)
+    bots = ListBox(master,16,0,2,8,4,40)
     proxies = ListBox(master,10,3,1,7,3,22)
     
     lowcpu = IntVar()
@@ -17,6 +17,7 @@ def initGUI():
     password = StringVar()
     filename = FileName()
     dirname = FileName()
+    botfilename = FileName()
     batname = StringVar()
     
     botusername = StringVar()
@@ -114,18 +115,34 @@ def initGUI():
 
     ####################### Buttons ############################
 
-    Button(master, text="Add Bot", command=lambda: addBot(bots,proxies,botusername,botpassword,botpin,wbname,wbpass,wbpin,botworld,botscript,botparam))\
-                   .grid(row=13, column=0, columnspan=2, pady=(0,20))
+    waddbot = Button(master, text="Add Bot", command=lambda: addBot(bots,proxies,botusername,botpassword,\
+                                                          botpin,wbname,wbpass,wbpin,botworld,botscript,botparam))
+    waddbot.grid(row=13, column=1,pady=20)
+    createToolTip(waddbot,"Click on proxy to attatch to bot")
+    
+    
     Button(master, text="Add Proxy", command=lambda: addProxy(proxies,ip,port\
                     ,proxyname,proxypass,wip,wport,wname,wpass)).grid(row=10, column=2, sticky=E)
     Button(master, text="Clear Proxies", command=lambda: proxies.deleteElements()).grid(row=12, column=2, sticky=E)
     Button(master, text="Delete Proxy", command=lambda: proxies.deleteSelected()).grid(row=11, column=2, sticky=E)
-    Button(master, text="Clear Bots", command=lambda: bots.deleteElements()).grid(row=17,column=2)
-    Button(master, text="Make Bat",command=lambda: makeBat(pathlabel,lowcpu,lowresource,username,\
-                                                           password,bots,batname,dirname,filename)).grid(row=18,column=2)
-    Button(master, text="Delete Bot", command=lambda: bots.deleteSelected()).grid(row=16,column=2)
+    Button(master, text="Clear Bots", command=lambda: bots.deleteElements()).grid(row=17,column=2,sticky=W)
+    
+    wmakebat = Button(master, text="Make Bat",command=lambda: makeBat(pathlabel,lowcpu,lowresource,username,\
+                                                           password,bots,batname,dirname,filename))
+    wmakebat.grid(row=18,column=2,sticky=W)
+    createToolTip(wmakebat,"Creates .bat file at specified location")
+    
+    Button(master, text="Delete Bot", command=lambda: bots.deleteSelected()).grid(row=16,column=2,sticky=W)
     Button(master, text="Browse",command=lambda: getFile(filename,pathlabel)).grid(row=4,column=1,sticky=W)
     
+    wimportbots = Button(master, text="Import Bots",command=lambda: getBots(bots,botfilename))
+    wimportbots.grid(row=19,column=2,sticky=W)
+    createToolTip(wimportbots,"Import .txt file with format \"username:password\" per bot per line")
+    
+    wupdate = Button(master, text="Update Bot",command=lambda: updateBot(bots,proxies,botpin,botworld,botscript,botparam))
+    wupdate.grid(row=13,column=0,sticky=E)
+    createToolTip(wupdate,"Updates selected bot (does not update username or password)")
+
 
     #Create Bot Box
     Label(master, text="Bots").grid(row=15,column=0,columnspan=2)
@@ -133,17 +150,15 @@ def initGUI():
 
     #Bat path
     Label(master, text=".bat Location").grid(row=16,column=3,sticky=W)
-    Button(master, text="Browse",command=lambda: getDir(dirname,dirlabel)).grid(row=16,column=3,sticky=E,padx=(0,10))
+    wbatlocation = Button(master, text="Browse",command=lambda: getDir(dirname,dirlabel))
+    wbatlocation.grid(row=16,column=3,sticky=E,padx=(0,10))
+    createToolTip(wbatlocation,"Choose where the .bat file will be created")
     dirlabel = Label(master, text="",width = 20)
     dirlabel.grid(row=17, column=3, pady=10,sticky=W)
     Label(master, text=".bat Name").grid(row=18,column=3,sticky=W)
     wbatname = Entry(master, textvariable=batname, width=13)
     wbatname.grid(row=18,column=3,padx=(60,0))
-    
-    
 
-
-    
     mainloop()
 class FileName:
     def __init__(self):
@@ -163,7 +178,7 @@ class ListBox:
         
 
     def createListBox(self):
-        self.lb = Listbox(self.master, width=self.width, height=self.height)
+        self.lb = Listbox(self.master, width=self.width, height=self.height,exportselection=0)
         self.lb.grid(row = self.row, column = self.column,\
                      columnspan=self.columnspan,rowspan=self.rowspan, pady=10, padx=5)
     def deleteElements(self):
@@ -177,6 +192,9 @@ class ListBox:
 
     def insertElement(self,element):
         self.elements.append(element)
+        self.updateElements()
+    def updateElement(self,element,index):
+        self.elements[index] = element
         self.updateElements()
 
     def getSelectedElement(self):
@@ -225,17 +243,17 @@ def addBot(bots,proxies,botusername,botpassword,botpin,wbname,wbpass,wbpin,botwo
     if botpin.get():
         result += ":" + botpin.get()
     else:
-        result += ":0000"
+        result += ":0000 "
     if proxies.selected():
-        result += " -proxy "+proxies.getSelectedElement()
+        result += "-proxy "+proxies.getSelectedElement() + " "
     if botscript.get():
-        result += " -script " + botscript.get()
+        result += "-script " + botscript.get() + " "
         if botparam:
             result += ":" + botparam.get()
         else:
             result += ":0"
     if botworld.get():
-        result += " -world " + botworld.get()
+        result += "-world " + botworld.get() + " "
         
     bots.insertElement(result)
     wbname.delete(0,END)
@@ -277,13 +295,10 @@ def makeBat(pathlabel,lowcpu,lowresource,username,password,bots,batname,dirname,
     for bot in bots.elements:
         outfile.write(result + bot + "\n")
     outfile.close()
+    messagebox.showinfo("File created",batname.get()+".bat created")
 
 def checkFields(username,password,filename,dirname,batname,bots):
     check = []
-    if not username.get():
-        check.append("Username")
-    if not password.get():
-        check.append("Password")
     if not filename.name:
         check.append("OSBot Path")
     if not batname.get():
@@ -313,8 +328,86 @@ def checkBot(botusername,botpassword):
     if not botpassword.get():
         check.append("Password")
     return check
-        
 
+def getBots(bots,botfilename):
+    botfilename.name = fd.askopenfilename()
+    infile = open(botfilename.name,"r")
+    data = infile.readlines()
+    for element in data:
+        
+        result = element.strip() + ":0000 "
+        bots.insertElement(result)
+    infile.close()
+    messagebox.showinfo("File import",str(len(data)) + " bots imported")
+
+def updateBot(bots,proxies,botpin,botworld,botscript,botparam):
+    if not bots.selected():
+        return
+    result = bots.getSelectedElement()
+    if botpin.get():
+        endIndex = result.find(" ")
+        result = result[0:endIndex-5] + ":" + botpin.get()
+    if proxies.selected():
+        endIndex = result.find("-proxy")
+        if endIndex != -1:
+            result = result[0:endIndex] + " -proxy "+proxies.getSelectedElement()
+        else:
+            result += " -proxy "+proxies.getSelectedElement()
+    if botscript.get():
+        result += " -script " + botscript.get()
+        if botparam:
+            result += ":" + botparam.get()
+        else:
+            result += ":0"
+    if botworld.get():
+        result += " -world " + botworld.get()
+    bots.updateElement(result,bots.getIndexOfSelected())
+
+class ToolTip(object):
+
+    def __init__(self, widget):
+        self.widget = widget
+        self.tipwindow = None
+        self.id = None
+        self.x = self.y = 0
+
+    def showtip(self, text):
+        "Display text in tooltip window"
+        self.text = text
+        if self.tipwindow or not self.text:
+            return
+        x, y, cx, cy = self.widget.bbox("insert")
+        x = x + self.widget.winfo_rootx() + 27
+        y = y + cy + self.widget.winfo_rooty() +27
+        self.tipwindow = tw = Toplevel(self.widget)
+        tw.wm_overrideredirect(1)
+        tw.wm_geometry("+%d+%d" % (x, y))
+        try:
+            # For Mac OS
+            tw.tk.call("::tk::unsupported::MacWindowStyle",
+                       "style", tw._w,
+                       "help", "noActivates")
+        except TclError:
+            pass
+        label = Label(tw, text=self.text, justify=LEFT,
+                      background="#ffffe0", relief=SOLID, borderwidth=1,
+                      font=("tahoma", "8", "normal"))
+        label.pack(ipadx=1)
+
+    def hidetip(self):
+        tw = self.tipwindow
+        self.tipwindow = None
+        if tw:
+            tw.destroy()
+
+def createToolTip(widget, text):
+    toolTip = ToolTip(widget)
+    def enter(event):
+        toolTip.showtip(text)
+    def leave(event):
+        toolTip.hidetip()
+    widget.bind('<Enter>', enter)
+    widget.bind('<Leave>', leave)
     
         
 if __name__ == '__main__':
