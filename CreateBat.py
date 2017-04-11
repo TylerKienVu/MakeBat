@@ -4,11 +4,12 @@ from tkinter import messagebox
 
 def initGUI():
     master = Tk()
-    master.title("CreateBat v0.2")
+    master.title("CreateBat v0.3")
     master.resizable(width=False, height=False)
+    master.geometry('{}x{}'.format(550, 700))
     
-    bots = ListBox(master,16,0,2,8,4,40)
-    proxies = ListBox(master,10,3,1,7,3,22)
+    bots = ListBox(master,16,0,2,8,4,40,EXTENDED)
+    proxies = ListBox(master,10,3,1,10,4,22,BROWSE)
     
     lowcpu = IntVar()
     lowresource = IntVar()
@@ -18,6 +19,7 @@ def initGUI():
     filename = FileName()
     dirname = FileName()
     botfilename = FileName()
+    proxyfilename= FileName()
     batname = StringVar()
     
     botusername = StringVar()
@@ -89,7 +91,7 @@ def initGUI():
 
     #Create Proxies box
     Label(master, text="Proxies")\
-                  .grid(row=9, column=3)
+                  .grid(row=9, column=3,sticky=S)
     proxies.createListBox()
 
     ############## Proxy details #####################
@@ -117,7 +119,7 @@ def initGUI():
 
     waddbot = Button(master, text="Add Bot", command=lambda: addBot(bots,proxies,botusername,botpassword,\
                                                           botpin,wbname,wbpass,wbpin,botworld,botscript,botparam))
-    waddbot.grid(row=13, column=1,pady=20)
+    waddbot.grid(row=13, column=1,pady=20,sticky=E,padx=(0,10))
     createToolTip(waddbot,"Click on proxy to attatch to bot")
     
     
@@ -126,6 +128,9 @@ def initGUI():
     Button(master, text="Clear Proxies", command=lambda: proxies.deleteElements()).grid(row=12, column=2, sticky=E)
     Button(master, text="Delete Proxy", command=lambda: proxies.deleteSelected()).grid(row=11, column=2, sticky=E)
     Button(master, text="Clear Bots", command=lambda: bots.deleteElements()).grid(row=17,column=2,sticky=W)
+    wimportproxies = Button(master,text="Import Proxies",command=lambda:getProxies(proxies,proxyfilename))
+    wimportproxies.grid(row=13,column=2,sticky=E,padx=(40,0),pady=(0,20))
+    createToolTip(wimportproxies,"Import .txt file with format \"ip:root:name:pass\" per proxy per line")
     
     wmakebat = Button(master, text="Make Bat",command=lambda: makeBat(pathlabel,lowcpu,lowresource,username,\
                                                            password,bots,batname,dirname,filename))
@@ -140,10 +145,12 @@ def initGUI():
     createToolTip(wimportbots,"Import .txt file with format \"username:password\" per bot per line")
     
     wupdate = Button(master, text="Update Bot",command=lambda: updateBot(bots,proxies,botpin,botworld,botscript,botparam))
-    wupdate.grid(row=13,column=0,sticky=E)
+    wupdate.grid(row=13,column=0,sticky=W,padx=(10,0))
     createToolTip(wupdate,"Updates selected bot (does not update username or password)")
 
-
+    wupdateall = Button(master,text="Update All",command=lambda:updateAll(bots,proxies,botpin,botworld,botscript,botparam))
+    wupdateall.grid(row=13,column=1,sticky=W)
+    
     #Create Bot Box
     Label(master, text="Bots").grid(row=15,column=0,columnspan=2)
     bots.createListBox()
@@ -155,9 +162,9 @@ def initGUI():
     createToolTip(wbatlocation,"Choose where the .bat file will be created")
     dirlabel = Label(master, text="",width = 20)
     dirlabel.grid(row=17, column=3, pady=10,sticky=W)
-    Label(master, text=".bat Name").grid(row=18,column=3,sticky=W)
+    Label(master, text=".bat Name").grid(row=18,column=3,sticky=W,padx=(0,20))
     wbatname = Entry(master, textvariable=batname, width=13)
-    wbatname.grid(row=18,column=3,padx=(60,0))
+    wbatname.grid(row=18,column=3,sticky=E)
 
     mainloop()
 class FileName:
@@ -165,7 +172,7 @@ class FileName:
         self.name = None
 
 class ListBox:
-    def __init__(self,master,row,column,columnspan,height,rowspan,width):
+    def __init__(self,master,row,column,columnspan,height,rowspan,width,selection):
         self.master = master
         self.elements = []
         self.row = row
@@ -175,12 +182,13 @@ class ListBox:
         self.height = height
         self.lb = None
         self.width = width
+        self.selection = selection
         
 
     def createListBox(self):
-        self.lb = Listbox(self.master, width=self.width, height=self.height,exportselection=0)
+        self.lb = Listbox(self.master, width=self.width, height=self.height,exportselection=0,selectmode=self.selection)
         self.lb.grid(row = self.row, column = self.column,\
-                     columnspan=self.columnspan,rowspan=self.rowspan, pady=10, padx=5)
+                     columnspan=self.columnspan,rowspan=self.rowspan, padx=5,sticky=N)
     def deleteElements(self):
         self.lb.delete(0,END)
         self.elements = []
@@ -198,7 +206,10 @@ class ListBox:
         self.updateElements()
 
     def getSelectedElement(self):
-        return self.lb.get(self.lb.curselection()[0])
+        return self.lb.curselection()
+
+    def getIndex(self,index):
+        return self.lb.get(index)
 
     def selected(self):
         if self.lb.curselection():
@@ -210,9 +221,18 @@ class ListBox:
 
     def deleteSelected(self):
         if self.selected():
-            index = self.getIndexOfSelected()
-            self.lb.delete(index)
-            self.elements.pop(index)
+            indices = self.getSelectedElement()
+            toDelete = []
+            for i in indices:
+                toDelete.append(self.getIndex(i))
+            for element in toDelete:
+                counter = 0
+                for entry in self.elements:
+                    if entry == element:
+                        self.lb.delete(counter)
+                        self.elements.pop(counter)
+                        break
+                    counter += 1
 
 def addProxy(proxies,ip,port,proxyname,proxypass,wip,wport,wname,wpass):
     check = checkProxy(ip,port,proxyname,proxypass)
@@ -334,35 +354,68 @@ def getBots(bots,botfilename):
     infile = open(botfilename.name,"r")
     data = infile.readlines()
     for element in data:
-        
         result = element.strip() + ":0000 "
         bots.insertElement(result)
     infile.close()
     messagebox.showinfo("File import",str(len(data)) + " bots imported")
 
+def getProxies(proxies,proxyfilename):
+    proxyfilename.name = fd.askopenfilename()
+    infile = open(proxyfilename.name,"r")
+    data = infile.readlines()
+    for element in data:
+        proxies.insertElement(element)
+    infile.close()
+    messagebox.showinfo("Proxy import",str(len(data)) + " proxies imported")
+
 def updateBot(bots,proxies,botpin,botworld,botscript,botparam):
     if not bots.selected():
         return
-    result = bots.getSelectedElement()
-    if botpin.get():
-        endIndex = result.find(" ")
-        result = result[0:endIndex-5] + ":" + botpin.get()
-    if proxies.selected():
-        endIndex = result.find("-proxy")
-        if endIndex != -1:
-            result = result[0:endIndex] + " -proxy "+proxies.getSelectedElement()
-        else:
-            result += " -proxy "+proxies.getSelectedElement()
-    if botscript.get():
-        result += " -script " + botscript.get()
+    for bot in bots.getSelectedElement():
+        result = bots.getIndex(bot)
+        if botpin.get():
+            endIndex = result.find(" ")
+            result = result[0:endIndex-5] + ":" + botpin.get()
+        if proxies.selected():
+            endIndex = result.find("-proxy")
+            if endIndex != -1:
+                result = result[0:endIndex] + " -proxy "+proxies.getSelectedElement()
+            else:
+                result += " -proxy "+proxies.getSelectedElement()
+        if botscript.get():
+            result += " -script " + botscript.get()
+            if botparam:
+                result += ":" + botparam.get()
+            else:
+                result += ":0"
+        if botworld.get():
+            result += " -world " + botworld.get()
+        bots.updateElement(result,bot)
+
+def updateAll(bots,proxies,botpin,botworld,botscript,botparam):
+    counter = 0
+    for bot in bots.elements:
+        result = bot
+        if botpin.get():
+            endIndex = result.find(" ")
+            result = result[0:endIndex-5] + ":" + botpin.get()
+        if proxies.selected():
+            endIndex = result.find("-proxy")
+            if endIndex != -1:
+                result = result[0:endIndex] + " -proxy "+proxies.getSelectedElement()
+            else:
+                result += " -proxy "+proxies.getSelectedElement()
+        if botscript.get():
+            result += " -script " + botscript.get()
         if botparam:
             result += ":" + botparam.get()
         else:
             result += ":0"
-    if botworld.get():
-        result += " -world " + botworld.get()
-    bots.updateElement(result,bots.getIndexOfSelected())
-
+        if botworld.get():
+            result += " -world " + botworld.get()
+        bots.updateElement(result,counter)
+        counter += 1
+        
 class ToolTip(object):
 
     def __init__(self, widget):
