@@ -150,6 +150,7 @@ def initGUI():
 
     wupdateall = Button(master,text="Update All",command=lambda:updateAll(bots,proxies,botpin,botworld,botscript,botparam))
     wupdateall.grid(row=13,column=1,sticky=W)
+    createToolTip(wupdateall,"Updates all bots")
     
     #Create Bot Box
     Label(master, text="Bots").grid(row=15,column=0,columnspan=2)
