@@ -4,7 +4,7 @@ from tkinter import messagebox
 
 def initGUI():
     master = Tk()
-    master.title("CreateBat v0.3")
+    master.title("CreateBat v0.4 by Tylersobored")
     master.resizable(width=False, height=False)
     master.geometry('{}x{}'.format(550, 700))
     
@@ -261,21 +261,20 @@ def addBot(bots,proxies,botusername,botpassword,botpin,wbname,wbpass,wbpin,botwo
         messagebox.showinfo("Missing Fields",error)
         return
     result = botusername.get()+":"+botpassword.get()
-    if botpin.get():
+    if botpin.get():    
         result += ":" + botpin.get()
     else:
-        result += ":0000 "
+        result += ":0000"
     if proxies.selected():
-        result += "-proxy "+proxies.getSelectedElement() + " "
+        result += " -proxy " + proxies.getIndex(proxies.getSelectedElement()[0])
     if botscript.get():
-        result += "-script " + botscript.get() + " "
-        if botparam:
+        result += " -script " + botscript.get()
+        if botparam.get():
             result += ":" + botparam.get()
         else:
             result += ":0"
     if botworld.get():
-        result += "-world " + botworld.get() + " "
-        
+        result += " -world " + botworld.get()
     bots.insertElement(result)
     wbname.delete(0,END)
     wbpass.delete(0,END)
@@ -355,7 +354,7 @@ def getBots(bots,botfilename):
     infile = open(botfilename.name,"r")
     data = infile.readlines()
     for element in data:
-        result = element.strip() + ":0000 "
+        result = element.strip() + ":0000"
         bots.insertElement(result)
     infile.close()
     messagebox.showinfo("File import",str(len(data)) + " bots imported")
@@ -374,18 +373,21 @@ def updateBot(bots,proxies,botpin,botworld,botscript,botparam):
         return
     for bot in bots.getSelectedElement():
         result = bots.getIndex(bot)
+        paramIndex = result.find("-")
+        if paramIndex != -1:
+            endIndex = paramIndex -6
+        else:
+            endIndex = result.rfind(":")
+        result = result[0:endIndex]
         if botpin.get():
-            endIndex = result.find(" ")
-            result = result[0:endIndex-5] + ":" + botpin.get()
+            result += ":" + botpin.get()
+        else:
+            result += ":0000"
         if proxies.selected():
-            endIndex = result.find("-proxy")
-            if endIndex != -1:
-                result = result[0:endIndex] + " -proxy "+proxies.getSelectedElement()
-            else:
-                result += " -proxy "+proxies.getSelectedElement()
+            result += " -proxy " + proxies.getIndex(proxies.getSelectedElement()[0])
         if botscript.get():
             result += " -script " + botscript.get()
-            if botparam:
+            if botparam.get():
                 result += ":" + botparam.get()
             else:
                 result += ":0"
@@ -397,21 +399,24 @@ def updateAll(bots,proxies,botpin,botworld,botscript,botparam):
     counter = 0
     for bot in bots.elements:
         result = bot
+        paramIndex = result.find("-")
+        if paramIndex != -1:
+            endIndex = paramIndex -6
+        else:
+            endIndex = result.rfind(":")
+        result = result[0:endIndex]
         if botpin.get():
-            endIndex = result.find(" ")
-            result = result[0:endIndex-5] + ":" + botpin.get()
+            result += ":" + botpin.get()
+        else:
+            result += ":0000"
         if proxies.selected():
-            endIndex = result.find("-proxy")
-            if endIndex != -1:
-                result = result[0:endIndex] + " -proxy "+proxies.getSelectedElement()
-            else:
-                result += " -proxy "+proxies.getSelectedElement()
+            result += " -proxy " + proxies.getIndex(proxies.getSelectedElement()[0])
         if botscript.get():
             result += " -script " + botscript.get()
-        if botparam:
-            result += ":" + botparam.get()
-        else:
-            result += ":0"
+            if botparam.get():
+                result += ":" + botparam.get()
+            else:
+                result += ":0"
         if botworld.get():
             result += " -world " + botworld.get()
         bots.updateElement(result,counter)
