@@ -1,10 +1,19 @@
 from tkinter import *
 from tkinter import filedialog as fd
 from tkinter import messagebox
+import random
+
+f2p = [301,308,316,326,335,382,383,384,393,394]
+p2p = [302,303,304,305,306,307,309,310,311,312,
+313,314,315,317,318,319,320,321,322,323,324,
+327,328,329,330,331,332,333,334,336,338,339,
+340,341,342,343,344,346,347,348,350,351,352,
+354,355,356,357,358,359,360,362,367,368,369
+,370,374,375,376,377,378,386]
 
 def initGUI():
     master = Tk()
-    master.title("CreateBat v0.4 by Tylersobored")
+    master.title("CreateBat v0.4.1 by Tylersobored")
     master.resizable(width=False, height=False)
     master.geometry('{}x{}'.format(550, 700))
     
@@ -80,6 +89,8 @@ def initGUI():
                   .grid(row=10, column=0, sticky=W, padx=5, pady=10)
     wbworld = Entry(master, textvariable=botworld, width=20)
     wbworld.grid(row=10, column=1, sticky=W, padx=5, pady=10)
+    createToolTip(wbworld,"Enter \"p2p\" or \"f2p\" for random f2p or p2p world")
+
     Label(master, text="Script")\
                   .grid(row=11, column=0, sticky=W, padx=5, pady=10)
     wbscript = Entry(master, textvariable=botscript, width=20)
@@ -274,7 +285,12 @@ def addBot(bots,proxies,botusername,botpassword,botpin,wbname,wbpass,wbpin,botwo
         else:
             result += ":0"
     if botworld.get():
-        result += " -world " + botworld.get()
+        if botworld.get().lower() == "f2p":
+            result += " -world " + str(f2p[random.randint(-1,len(f2p)-1)])
+        elif botworld.get().lower() == "p2p":
+            result += " -world " + str(p2p[random.randint(-1,len(f2p)-1)])
+        else:
+            result += " -world " + botworld.get()
     bots.insertElement(result)
     wbname.delete(0,END)
     wbpass.delete(0,END)
@@ -392,7 +408,12 @@ def updateBot(bots,proxies,botpin,botworld,botscript,botparam):
             else:
                 result += ":0"
         if botworld.get():
-            result += " -world " + botworld.get()
+            if botworld.get().lower() == "f2p":
+                result += " -world " + str(f2p[random.randint(-1,len(f2p)-1)])
+            elif botworld.get().lower() == "p2p":
+                result += " -world " + str(p2p[random.randint(-1,len(f2p)-1)])
+            else:
+                result += " -world " + botworld.get()
         bots.updateElement(result,bot)
 
 def updateAll(bots,proxies,botpin,botworld,botscript,botparam):
@@ -418,7 +439,12 @@ def updateAll(bots,proxies,botpin,botworld,botscript,botparam):
             else:
                 result += ":0"
         if botworld.get():
-            result += " -world " + botworld.get()
+            if botworld.get().lower() == "f2p":
+                result += " -world " + str(f2p[random.randint(-1,len(f2p)-1)])
+            elif botworld.get().lower() == "p2p":
+                result += " -world " + str(p2p[random.randint(-1,len(f2p)-1)])
+            else:
+                result += " -world " + botworld.get()
         bots.updateElement(result,counter)
         counter += 1
         
